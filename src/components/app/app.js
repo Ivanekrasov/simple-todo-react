@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import uid from 'uid';
+import uid from "uid";
 import AppHeader from "../app-header";
 import SearchPanel from "../search-panel";
 import TodoList from "../todo-list";
@@ -9,25 +9,18 @@ import AddTodo from "../add-todo";
 import "./app.scss";
 
 export default class App extends Component {
-  state = () => {
-    this.resetState();
+  data = [
+    this.createTodoItem("Drink Coffee"),
+    this.createTodoItem("Make Awesome App", true),
+    this.createTodoItem("Have a lunch", false, true)
+  ];
+
+  state = {
+    todoData: this.data,
+    filter: "all"
   };
 
-  defaultValue = () => {
-    return [
-      this.createTodoItem("Drink Coffee"),
-      this.createTodoItem("Make Awesome App", true),
-      this.createTodoItem("Have a lunch", false, true)
-    ];
-  };
-
-  resetState = () => {
-    this.setState({
-      todoData: this.defaultValue
-    });
-  };
-
-  createTodoItem (label, important = false, done = false) {
+  createTodoItem(label, important = false, done = false) {
     return {
       label,
       important,
@@ -44,7 +37,7 @@ export default class App extends Component {
         todoData: updData
       };
     });
-  };
+  }
 
   addItem = text => {
     this.setState(({ todoData }) => {
@@ -52,7 +45,7 @@ export default class App extends Component {
         todoData: [...todoData, this.createTodoItem(text)]
       };
     });
-  };
+  }
 
   toggleProperty = (arr, id, propName) => {
     const idx = arr.findIndex(el => el.id === id);
@@ -61,7 +54,7 @@ export default class App extends Component {
       { ...arr[idx], [propName]: !arr[idx][propName] },
       ...arr.slice(idx + 1)
     ];
-  };
+  }
 
   toggleDone = id => {
     this.setState(({ todoData }) => {
@@ -69,7 +62,7 @@ export default class App extends Component {
         todoData: this.toggleProperty(todoData, id, "done")
       };
     });
-  };
+  }
 
   toggleImportant = id => {
     this.setState(({ todoData }) => {
@@ -77,28 +70,47 @@ export default class App extends Component {
         todoData: this.toggleProperty(todoData, id, "important")
       };
     });
-  };
+  }
 
-  filteredData = (filterType = '') => {
+  filterData = (filterType = "") => {
     switch (filterType) {
-      case 'all':
-        this.resetState();
+      case "active":
+        this.setState({
+          todoData: this.data.filter(el => !el.done),
+          filter: "active"
+        });
         break;
-      case 'important':
-        this.setState( this.defaultValue.filter
-    };
-  };
+      case "done":
+        this.setState({
+          todoData: this.data.filter(el => el.done),
+          filter: "done"
+        });
+        break;
+      default:
+        this.setState({ todoData: this.data });
+        break;
+    }
+  }
+
+  searchData = (searchTemplate = '') => {
+    this.setState({
+      todoData: this.data.filter(el => el.label.toLowerCase().includes(searchTemplate.toLocaleLowerCase()))
+    });
+  }
+
 
   render() {
-    const { todoData } = this.state;
+    const { todoData, filter } = this.state;
     const countDone = todoData.filter(elem => elem.done).length;
-    const countUndone = todoData.length - countDone;
     return (
       <div className="todo-app">
-        <AppHeader toDo={countUndone} done={countDone} />
+        <AppHeader toDo={todoData.length - countDone} done={countDone} />
         <div className="top-panel d-flex">
-          <SearchPanel />
-          <ItemStatusFilter onFilterData={this.filterData}/>
+          <SearchPanel onSearchChange={this.searchData} />
+          <ItemStatusFilter
+            onFilterData={this.filterData}
+            filterStatus={filter}
+          />
         </div>
 
         <TodoList
